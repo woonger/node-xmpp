@@ -36,13 +36,7 @@ process.on('SIGINT', function() {
 });
 
 
-var PROBE_DOMAINS = ["spaceboyz.net", "jabber.ccc.de",
-		     "gmail.com", "jabber.org",
-		     "jabbim.cz", "jabber.ru",
-		     "process-one.net", "gtalk2voip.com",
-		     "swissjabber.ch", "aspsms.swissjabber.ch",
-		     "icq.hq.c3d2.de", "codetu.be",
-		     "webkeks.org"];
+var PROBE_DOMAINS = ["zipline", "spaceboyz.net", "gmail.com", "jabber.ru", "process-one.net"];
 function probe() {
     setTimeout(probe, Math.floor((Math.random() * 15 + 5) * 1000));
 
