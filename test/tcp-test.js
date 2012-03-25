@@ -1,66 +1,65 @@
-var vows = require('vows'),
-assert = require('assert'),
+var test = require('tap').test,
 xmpp = require('./../lib/xmpp');
 
 const C2S_PORT = 45552;
 
-vows.describe('TCP client/server').addBatch({
-    'client': {
-	topic: function() {
-	    var that = this;
-	    this.sv = new xmpp.C2SServer({ port: C2S_PORT });
-	    this.sv.on('connect', function(svcl) {
-		that.svcl = svcl;
-		svcl.on('authenticate', function(opts, cb) {
-		    cb();
-		});
-	    });
-	    this.cl = new xmpp.Client({
+test('TCP client/server', function(t) {
+    var sv = new xmpp.C2SServer({ port: C2S_PORT }), svcl;
+    sv.on('connect', function(svcl_) {
+	svcl = svcl_;
+	svcl.on('authenticate', function(opts, cb) {
+	    cb();
+	});
+    });
+
+    t.test('client', function(t) {
+	var cl;
+	t.test("can log in" ,function(t) {
+	    cl = new xmpp.Client({
 		jid: 'test@example.com',
 		password: 'test',
 		host: '::1',
 		port: C2S_PORT
 	    });
-	    var cb = this.callback;
-	    this.cl.on('online', function() {
-		cb();
+	    cl.on('online', function() {
+		console.error("oneline", t.end);
+		t.end();
+		console.error("onelined");
 	    });
-	},
-	"logged in": function() {},
-	'can send stanzas': {
-	    topic: function() {
-		var cb = this.callback;
-		this.svcl.once('stanza', function(stanza) {
-		    cb(null, stanza);
+	});
+	t.test('can send stanzas', function(t) {
+	    svcl.once('stanza', function(stanza) {
+		t.test("received proper message", function(t) {
+		    t.ok(stanza.is('message'), "Message stanza");
+		    t.equal(stanza.attrs.to, "foo@bar.org");
+		    t.equal(stanza.getChildText('body'), "Hello");
 		});
-		this.cl.send(new xmpp.Message({ to: "foo@bar.org" }).
-			     c('body').t("Hello"));
-	    },
-	    "received proper message": function(stanza) {
-		assert.ok(stanza.is('message'), "Message stanza");
-		assert.equal(stanza.attrs.to, "foo@bar.org");
-		assert.equal(stanza.getChildText('body'), "Hello");
-	    }
-	},
-	'can receive stanzas': {
-	    topic: function() {
-		var cb = this.callback;
-		this.cl.once('stanza', function(stanza) {
-		    cb(null, stanza);
+		t.end();
+	    });
+	    cl.send(new xmpp.Message({ to: "foo@bar.org" }).
+			 c('body').t("Hello"));
+	});
+	t.test('can receive stanzas', function(t) {
+	    cl.once('stanza', function(stanza) {
+		t.test("received proper message", function(t) {
+		    t.ok(stanza.is('message'), "Message stanza");
+		    t.equal(stanza.attrs.to, "bar@bar.org");
+		    t.equal(stanza.getChildText('body'), "Hello back");
 		});
-		this.svcl.send(new xmpp.Message({ to: "bar@bar.org" }).
-			       c('body').t("Hello back"));
-	    },
-	    "received proper message": function(stanza) {
-		assert.ok(stanza.is('message'), "Message stanza");
-		assert.equal(stanza.attrs.to, "bar@bar.org");
-		assert.equal(stanza.getChildText('body'), "Hello back");
-	    }
-	}
-    },
+		t.end();
+			 });
+	    svcl.send(new xmpp.Message({ to: "bar@bar.org" }).
+			   c('body').t("Hello back"));
+	});
+	t.end();
+    });
+    t.test("frob", function(t) {
+	t.ok(true, "Yup");
+	t.end();
+    });
+    //'client fails login': "pending",
 
-    'client fails login': "pending",
+    //'auto reconnect': "pending"
 
-    'auto reconnect': "pending"
-
-}).export(module);
+    t.end();
+});
