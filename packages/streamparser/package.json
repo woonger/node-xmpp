@@ -12,6 +12,7 @@
     "parser"
   ],
   "dependencies": {
+    "inherits": "^2.0.1",
     "@xmpp/xml": "^0.0.1",
     "ltx": "^2.5.0"
   }
